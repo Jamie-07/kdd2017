@@ -11,12 +11,43 @@ import java.util.Iterator;
 public class CrawlerMain {
 	
 	public static ArrayList<RFDEntry> entries = new ArrayList<RFDEntry>();
+	public static ArrayList<String> predicateList = new ArrayList<String>();
 
 	public static void main(String[] args) {
 
 
 		storeTxtToList();
 		
+		System.out.println("***** STORED TO LIST ******");
+		
+		Iterator<RFDEntry> iterator = entries.iterator();
+		
+		while(iterator.hasNext()) {
+			
+			RFDEntry entry = iterator.next();
+			
+			//System.out.println("Check " + entry.getPredicate());
+			
+			if(!predicateList.contains(entry)) {
+				
+				predicateList.add(entry.getPredicate());
+				
+			} else {
+				
+				System.out.println("Duplicate: " + entry.getPredicate());
+				
+			}
+			
+		}
+		
+		//Predicate ausgeben
+		Iterator<String> iteratorPredicate = predicateList.iterator();
+		
+		while(iteratorPredicate.hasNext()) {
+			
+			System.out.println(iteratorPredicate.next());
+			
+		}
 		
 		
 
@@ -31,11 +62,10 @@ public class CrawlerMain {
 	
 	public static void storeTxtToList() {
 		
-		String path = "C:\\Users\\Jan-Peter Schmidt\\Dropbox\\Privat\\Uni\\Master\\3. Semester\\Data-mining and knowledge-discovery\\";
 		String fileName = "lwapis_v1.txt";
 		
 		try {
-			String content = readFile(path + fileName, Charset.forName("UTF-8"));
+			String content = readFile(fileName, Charset.forName("UTF-8"));
 			String[] lines = content.split("\\r\\n|\\n|\\r");
 			
 			System.out.println("Found " + lines.length + " lines.");
