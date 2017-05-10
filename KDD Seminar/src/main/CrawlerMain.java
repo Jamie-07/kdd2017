@@ -20,37 +20,8 @@ public class CrawlerMain {
 		
 		System.out.println("***** STORED TO LIST ******");
 		
-		Iterator<RFDEntry> iterator = entries.iterator();
+		analyzeDuplicates();
 		
-		while(iterator.hasNext()) {
-			
-			RFDEntry entry = iterator.next();
-			
-			//System.out.println("Check " + entry.getPredicate());
-			
-			if(!predicateList.contains(entry)) {
-				
-				predicateList.add(entry.getPredicate());
-				
-			} else {
-				
-				System.out.println("Duplicate: " + entry.getPredicate());
-				
-			}
-			
-		}
-		
-		//Predicate ausgeben
-		Iterator<String> iteratorPredicate = predicateList.iterator();
-		
-		while(iteratorPredicate.hasNext()) {
-			
-			System.out.println(iteratorPredicate.next());
-			
-		}
-		
-		
-
 	}
 	
 	public static String readFile(String path, Charset encoding) 
@@ -112,6 +83,40 @@ public class CrawlerMain {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
+		
+	}
+	
+	public static void analyzeDuplicates() {
+		
+		Iterator<RFDEntry> iterator = entries.iterator();
+		
+		while(iterator.hasNext()) {
+			
+			RFDEntry entry = iterator.next();
+			
+			//System.out.println("Check " + entry.getPredicate());
+			
+			if(!predicateList.contains(entry)) {
+				
+				predicateList.add(entry.getPredicate());
+				
+			} else {
+				
+				System.out.println("Duplicate: " + entry.getPredicate());
+				
+			}
+			
+		}
+		
+		//Predicate ausgeben
+		Iterator<String> iteratorPredicate = predicateList.iterator();
+		
+		while(iteratorPredicate.hasNext()) {
+			
+			System.out.println(iteratorPredicate.next());
+			
+		}
+		
 		
 	}
 
