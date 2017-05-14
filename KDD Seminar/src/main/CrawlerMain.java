@@ -8,6 +8,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
 public class CrawlerMain {
 	
 	public static ArrayList<RFDEntry> entries = new ArrayList<RFDEntry>();
@@ -20,7 +23,33 @@ public class CrawlerMain {
 		
 		System.out.println("***** STORED TO LIST ******");
 		
-		analyzeDuplicates();
+		//analyzeDuplicates();
+		
+		getAPITitles();
+		
+		int counter = 0;
+		
+		/*Iterator<String> iterator = getAPITitles().iterator();
+		while(iterator.hasNext()) {
+			
+			String title = iterator.next();
+			
+			try {
+				Document doc = Jsoup.connect("https://www.programmableweb.com/api/" + convertForURL(title)).get();
+				counter++;
+				System.out.println(counter);
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+			}
+			
+			
+		}*/
+		
+		System.out.println(counter);
+		
+		
 		
 	}
 	
@@ -86,6 +115,7 @@ public class CrawlerMain {
 		
 	}
 	
+	//Prints all predicates without duplicates
 	public static void analyzeDuplicates() {
 		
 		Iterator<RFDEntry> iterator = entries.iterator();
@@ -117,6 +147,37 @@ public class CrawlerMain {
 			
 		}
 		
+		
+	}
+	
+	public static ArrayList<String> getAPITitles() {
+		
+		ArrayList<String> titles = new ArrayList<String>();
+		
+		Iterator<RFDEntry> iterator = entries.iterator();
+		while(iterator.hasNext()) {
+			
+			RFDEntry entry = iterator.next();
+			
+			//<http://purl.org/dc/terms/title>
+			
+			if(entry.getPredicate().equals("<http://xmlns.com/foaf/0.1/homepage>")) {
+				titles.add(entry.getSubject());
+			}
+			
+			
+		}
+		
+		System.out.println("Found " + titles.size() + " homepages.");
+		
+		return titles;
+		
+		
+	}
+	
+	public static String convertForURL(String string) {
+		
+		return string.replace(" ","-").replace("\"","").toLowerCase();
 		
 	}
 
