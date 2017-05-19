@@ -1,5 +1,9 @@
 package model;
 
+import main.CrawlerMain;
+
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -66,34 +70,73 @@ public class API {
 
     public static void createCSV() {
 
-        String head = constructHead();
+        try {
+            PrintWriter out = new PrintWriter("KDD Seminar/out/database.csv");
 
-        Iterator<Map.Entry<String,API>> apiIterator = list.entrySet().iterator();
+            Iterator<Map.Entry<String, API>> apiIterator = list.entrySet().iterator();
 
-        int counter = 0;
+            out.println(constructHead());
 
-        while(apiIterator.hasNext()) {
+            while (apiIterator.hasNext()) {
 
-            Map.Entry<String, API> entry = apiIterator.next();
+                Map.Entry<String, API> entry = apiIterator.next();
 
-            if(counter < entry.getValue().getProperties().size()) {
-
-                counter = entry.getValue().getProperties().size();
+                out.println(entry.getValue().getCSVLine(entry.getKey()));
 
             }
 
+        } catch(IOException ioe) {
+            ioe.printStackTrace();
         }
-
-        System.out.println(counter);
-
-
 
     }
 
     private static String constructHead() {
 
-        return "";
+        String head = "Name;";
 
+        CrawlerMain.createPredicateList();
+
+        Iterator<String> iterator = CrawlerMain.getPredicateList().iterator();
+
+        while(iterator.hasNext()) {
+
+            head = head + iterator.next() + ";";
+
+        }
+
+        return head;
+
+
+    }
+
+    private String getCSVLine(String name) {
+
+        String csv=name+";";
+
+        Iterator<String> predicateIterator = CrawlerMain.getPredicateList().iterator();
+
+        while(predicateIterator.hasNext()) {
+
+            String predicate = predicateIterator.next();
+            Iterator<Map.Entry<String,String>> propertyIterator = properties.entrySet().iterator();
+
+            while(propertyIterator.hasNext()) {
+
+                Map.Entry<String,String> property = propertyIterator.next();
+                if(property.getKey().equals(predicate)) {
+
+                    csv = csv + property.getValue();
+
+                }
+
+            }
+
+            csv = csv + ";";
+
+        }
+
+        return csv;
 
     }
 }

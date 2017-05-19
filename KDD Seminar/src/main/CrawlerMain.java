@@ -46,6 +46,8 @@ public class CrawlerMain {
 
 		API.createCSV();
 
+		System.out.println(" ***** FINISHED ********");
+
 
 	}
 
@@ -65,7 +67,7 @@ public class CrawlerMain {
 			String[] lines = content.split("\\r\\n|\\n|\\r");
 			
 			System.out.println("Found " + lines.length + " lines.");
-			
+
 			int counter = 0;
 			
 			for(String line:lines) {
@@ -112,36 +114,34 @@ public class CrawlerMain {
 	}
 	
 	//Prints all predicates without duplicates
-	public static void analyzeDuplicates() {
+	public static void createPredicateList() {
 		
 		Iterator<RFDEntry> iterator = entries.iterator();
+
+		int counter = 0;
 		
 		while(iterator.hasNext()) {
-			
+
 			RFDEntry entry = iterator.next();
 			
 			//System.out.println("Check " + entry.getPredicate());
 			
-			if(!predicateList.contains(entry)) {
+			if(!predicateList.contains(entry.getPredicate())) {
 				
 				predicateList.add(entry.getPredicate());
-				
-			} else {
-				
-				System.out.println("Duplicate: " + entry.getPredicate());
 				
 			}
 			
 		}
 		
 		//Predicate ausgeben
-		Iterator<String> iteratorPredicate = predicateList.iterator();
+		/*Iterator<String> iteratorPredicate = predicateList.iterator();
 		
 		while(iteratorPredicate.hasNext()) {
 			
 			System.out.println(iteratorPredicate.next());
 			
-		}
+		}*/
 		
 		
 	}
@@ -177,4 +177,11 @@ public class CrawlerMain {
 		
 	}
 
+	public static ArrayList<RFDEntry> getEntries() {
+		return entries;
+	}
+
+	public static ArrayList<String> getPredicateList() {
+		return predicateList;
+	}
 }
