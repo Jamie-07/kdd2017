@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import model.API;
 import model.RFDEntry;
 
 public class CrawlerMain {
@@ -29,6 +30,23 @@ public class CrawlerMain {
 		//analyzeDuplicates();
 		
 		//getAPITitles();
+
+		Iterator<RFDEntry> iterator = entries.iterator();
+
+		while(iterator.hasNext()) {
+
+			RFDEntry entry = iterator.next();
+
+			API api = API.getOrCreate(entry.getSubject());
+			api.setProperty(entry);
+
+		}
+
+		System.out.println(API.getList().size() + " APIs found");
+
+		API.createCSV();
+
+
 	}
 
 	public static String readFile(String path, Charset encoding)
