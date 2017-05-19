@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+import model.RFDEntry;
 
 public class CrawlerMain {
 	
@@ -20,40 +20,18 @@ public class CrawlerMain {
 
 
 		storeTxtToList();
-		
+
+		/*Path map = Paths.get("KDD Seminar");
+		System.out.println(map.toAbsolutePath().toString());*/
+
 		System.out.println("***** STORED TO LIST ******");
 		
 		//analyzeDuplicates();
 		
-		getAPITitles();
-		
-		int counter = 0;
-		
-		/*Iterator<String> iterator = getAPITitles().iterator();
-		while(iterator.hasNext()) {
-			
-			String title = iterator.next();
-			
-			try {
-				Document doc = Jsoup.connect("https://www.programmableweb.com/api/" + convertForURL(title)).get();
-				counter++;
-				System.out.println(counter);
-				
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				//e.printStackTrace();
-			}
-			
-			
-		}*/
-		
-		System.out.println(counter);
-		
-		
-		
+		//getAPITitles();
 	}
-	
-	public static String readFile(String path, Charset encoding) 
+
+	public static String readFile(String path, Charset encoding)
 			  throws IOException 
 	{
 	  byte[] encoded = Files.readAllBytes(Paths.get(path));
@@ -62,7 +40,7 @@ public class CrawlerMain {
 	
 	public static void storeTxtToList() {
 		
-		String fileName = "lwapis_v1.txt";
+		String fileName = "KDD Seminar/lwapis_v1.txt";
 		
 		try {
 			String content = readFile(fileName, Charset.forName("UTF-8"));
