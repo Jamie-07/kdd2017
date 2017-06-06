@@ -14,6 +14,8 @@ public class JSON_API {
     String blogDescr;
     String ldDescr;
 
+    String body;
+
 
     public static int counter = 0;
 
@@ -81,6 +83,14 @@ public class JSON_API {
 
     public void setLdDescr(String ldDescr) {
         this.ldDescr = ldDescr;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
     }
 
     @Override

@@ -8,10 +8,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Scanner;
 
 /**
  * Created by Jan-Peter on 04.06.2017.
@@ -21,9 +24,10 @@ public class CheckURLMain {
     public static void main(String[] args) {
 
         ArrayList<JSON_API> list = new ArrayList<JSON_API>();
+        ArrayList<JSON_API> bodyList = new ArrayList<JSON_API>();
 
         try {
-            String fileContent = CrawlerMain.readFile("KDD Seminar/data_financial.json", Charset.forName("UTF-8"));
+            String fileContent = CrawlerMain.readFile("KDD Seminar/data_all.json", Charset.forName("UTF-8"));
 
             JSONObject file = new JSONObject(fileContent);
             JSONObject results = file.getJSONObject("results");
@@ -61,24 +65,30 @@ public class CheckURLMain {
 
                 public void run() {
 
-                    try {
+                    /*try {
                         //System.out.println("Check URL: \"" + api.getHomepage() + "\"");
                         String title = Jsoup.connect(api.getHomepage()).get().getElementsByTag("title").get(0).data();
                     } catch (Exception e) {
                         //e.printStackTrace();
                         api.setHomepage("");
                         System.out.println("No hp for " + api.getName());
-                    }
+                    }*/
 
                     try {
-                        String title = Jsoup.connect(api.getBlog()).get().getElementsByTag("title").get(0).data();
+                        String body = Jsoup.connect(api.getBlog()).get().html();
+                        System.out.println(body.length() + " chars found");
+                        api.setBody(body);
+
+                        bodyList.add(api);
+
+                        JSON_API.counter++;
                     } catch (Exception e) {
                         //e.printStackTrace();
                         api.setBlog("");
-                        System.out.println("No blog for " + api.getName());
+                        //System.out.println("No blog for " + api.getName());
                     }
 
-                    if(api.getBlog()==null || api.getBlog().equals("") && api.getHomepage()!=null && !api.getHomepage().equals("")) {
+                    /*if(api.getBlog()==null || api.getBlog().equals("") && api.getHomepage()!=null && !api.getHomepage().equals("")) {
 
                         //Take Blog from Programmable web
                         try {
@@ -91,9 +101,9 @@ public class CheckURLMain {
                         }
 
 
-                    }
+                    }*/
 
-                    System.out.println(api);
+                    //System.out.println(api);
 
                 }
 
@@ -103,21 +113,18 @@ public class CheckURLMain {
 
         //Check
 
-        new Thread() {
-            public void run() {
-
-                try {
-                    sleep(30000);
-                    System.out.println("Last: " + JSON_API.counter);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        Scanner scanner = new Scanner(System.in);
+        String readString = scanner.nextLine();
+        System.out.println(readString);
+        if (readString.equals("")) {
 
 
 
-
-            }
-        }.start();
+        }
+        if (scanner.hasNextLine())
+            readString = scanner.nextLine();
+        else
+            readString = null;
 
     }
 
