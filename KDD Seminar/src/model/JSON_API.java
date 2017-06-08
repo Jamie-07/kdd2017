@@ -9,6 +9,8 @@ public class JSON_API {
     String homepage;
     String blog;
     String endpoint;
+    String URI;
+    String keywords;
 
     String pwDescr;
     String blogDescr;
@@ -91,6 +93,22 @@ public class JSON_API {
 
     public void setBody(String body) {
         this.body = body;
+    }
+
+    public String getURI() {
+        return URI;
+    }
+
+    public void setURI(String URI) {
+        this.URI = URI;
+    }
+
+    public String getKeywords() {
+        return (keywords==null) ? ("") : (keywords);
+    }
+
+    public void setKeywords(String keywords) {
+        this.keywords = keywords;
     }
 
     @Override
