@@ -22,8 +22,8 @@ public class CrawlerMain {
 
 		storeTxtToList();
 
-		/*Path map = Paths.get("KDD Seminar");
-		System.out.println(map.toAbsolutePath().toString());*/
+		Path map = Paths.get("KDD Seminar");
+		System.out.println(map.toAbsolutePath().toString());
 
 		System.out.println("***** STORED TO LIST ******");
 		

@@ -1,15 +1,10 @@
 package main;
 
 import model.JSON_API;
-import org.apache.xmlbeans.impl.xb.xsdschema.impl.DocumentationDocumentImpl;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
-
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -26,11 +21,17 @@ public class CheckURLMain {
 
     public static void main(String[] args) {
 
+        //Stores all APIs
         ArrayList<JSON_API> list = new ArrayList<JSON_API>();
+
+        //Stores all APIs where a body can be loaded from the website
         ArrayList<JSON_API> bodyList = new ArrayList<JSON_API>();
 
+        int counterBlog = 0;
+
+        //Try to read the data_all.json - dump from SPARQL Endpoint of the LinkedData with relevant information about the api
         try {
-            String fileContent = CrawlerMain.readFile("KDD Seminar/data_all.json", Charset.forName("UTF-8"));
+            String fileContent = CrawlerMain.readFile("data_all.json", Charset.forName("UTF-8"));
 
             JSONObject file = new JSONObject(fileContent);
             JSONObject results = file.getJSONObject("results");
@@ -45,8 +46,10 @@ public class CheckURLMain {
 
                 api.setName(current.getJSONObject("name").getString("value"));
                 api.setHomepage(current.getJSONObject("homepage").getString("value"));
-                if(!current.isNull("blog")) {
+                if(!current.isNull("blog") && current.getJSONObject("blog").getString("value")!=null) {
                     api.setBlog(current.getJSONObject("blog").getString("value"));
+                    counterBlog++;
+                    //System.out.println(api.getBlog() + "<-- set");
                 }
 
                 if(!current.isNull("api")) {
@@ -58,9 +61,15 @@ public class CheckURLMain {
             e.printStackTrace();
         }
 
-        Iterator<JSON_API> iterator = list.iterator();
-
+        //How many APIs do we have at all?
         System.out.println(list.size() + " APIs.");
+
+        //How many APIs do provide an URL?
+        System.out.println(counterBlog + " Links für APIs gefunden.");
+
+
+        //Go through the whole API list and try to connect to the website / programmable web
+        Iterator<JSON_API> iterator = list.iterator();
 
         int counter = 0;
 
@@ -68,10 +77,12 @@ public class CheckURLMain {
 
             JSON_API api = iterator.next();
 
+            //Run crawler for each API in his own Thread to speed up the process (Waiting for server response takes some seconds for each API)
             new Thread() {
 
                 public void run() {
 
+                    //Deprecated - is now in Selcuks Crawler implemented
                     /*
                     Check Homepage -> ProgrammableWeb
                     try {
@@ -83,28 +94,169 @@ public class CheckURLMain {
                         System.out.println("No hp for " + api.getName());
                     }*/
 
+                    int counterABC = 0;
+
+                    //Try to connect to the given URL
                     try {
 
-                        Document page = Jsoup.connect(api.getBlog()).get();
+                        //No API Link given in Linked Data Set
+                        if(api.getBlog()==null) {
 
-                        String body =Jsoup.parse(page.html()).text().replaceAll("[^A-Za-z0-9 ]","");
-                        System.out.println(body.length() + " chars found");
-                        api.setBody(body);
+                            api.setError("No link");
 
-                        bodyList.add(api);
+                        } else {
+                            counterABC++;
 
-                        String keywords = page.select("meta[name=keywords]").get(0).attr("content").replaceAll("[^A-Za-z0-9 ]","");
-                        api.setKeywords(keywords);
+                            //Connect
+                            Document page = Jsoup.connect(api.getBlog()).get();
 
+                            //Fetch data from html body - only take letters or numbers
+                            String body =Jsoup.parse(page.html()).text().replaceAll("[^A-Za-z0-9 ]","");
+                            System.out.println(body.length() + " chars found");
+                            api.setBody(body);
 
+                            //Add API to list that only includes APIs with accessable websites
+                            bodyList.add(api);
 
-                        JSON_API.counter++;
-                    } catch (Exception e) {
+                            //Try also to store the keywords from the webpage given in meta-data
+                            try {
+                                String keywords = page.select("meta[name=keywords]").get(0).attr("content").replaceAll("[^A-Za-z0-9 ]", "");
+                                api.setKeywords(keywords);
+                            } catch(Exception eKeywords) {
+
+                            }
+
+                            JSON_API.counter++;
+                        }
+
+                    }
+                    //If accessing the given blog link is not possible - try to repair the link
+                    catch (Exception e) {
                         //e.printStackTrace();
-                        api.setBlog("");
-                        //System.out.println("No blog for " + api.getName());
+                        //System.out.println(e.getClass().getCanonicalName() + " for \"" +  api.getBlog() + "\"" + ", for API: " +api.getName());
+
+                        //HTTP Status Error or Unknown Host Exception are possible to repair
+                        if(e.getClass().getCanonicalName().equals("org.jsoup.HttpStatusException") ||
+                                e.getClass().getCanonicalName().equals("java.net.UnknownHostException")) {
+
+                            //Check for Subdomain - avoid subdomain -> use Toplevel domain
+                            int numDots = org.apache.commons.lang.StringUtils.countMatches(api.getBlog(),".");
+                            int numSlashes = org.apache.commons.lang.StringUtils.countMatches(api.getBlog(),"/");
+
+                            String newURL = "";
+                            //Subdomain detected -> get Toplevel-Domain
+                            if(numDots>1 && !api.getBlog().matches("(.*).html(.*)|(.*).php(.*)|(.*).shtml(.*)")) {
+
+                                int startSubdomain = api.getBlog().indexOf("//");
+                                int endSubdomain = api.getBlog().indexOf(".");
+                                newURL = api.getBlog().substring(0,startSubdomain+2) + api.getBlog().substring(endSubdomain+1,api.getBlog().length());
+
+                                //Check if real subdomain was detected or only 'www.' - if it is www cut again.
+                                if(api.getBlog().substring(startSubdomain+2,endSubdomain).equals("www") && org.apache.commons.lang.StringUtils.countMatches(newURL,".")>1) {
+                                    //System.out.println("Catched www " + newURL);
+
+                                    startSubdomain = newURL.indexOf("//");
+                                    endSubdomain = newURL.indexOf(".");
+                                    newURL = newURL.substring(0, startSubdomain + 2) + newURL.substring(endSubdomain + 1, newURL.length() - 1);
+                                }
+
+                                //System.out.println("Subdomain editing: " + api.getBlog() + " -> " + newURL);
+
+                                //Store improved URL
+                                api.setImproved(true);
+
+                            }
+                            //Path detected -> delete Path
+                            if(numSlashes > 2) {
+                                //Cut path and check URL again
+                                int slashCounter = 0;
+                                int position = -1;
+
+                                //Use toplevel domain without subdomain if already created
+                                String url = (newURL.equals("") ? (api.getBlog()) : (newURL));
+
+                                for(int i=0; i<url.length(); i++) {
+
+                                    if(url.charAt(i)=='/') {
+                                        slashCounter++;
+                                        position = i;
+                                    }
+
+                                    if(slashCounter>=3) {
+
+                                        break;
+
+                                    }
+
+                                }
+
+                                newURL = url.substring(0, position);
+
+                                //System.out.println("Path editing: " + url + " -> " + newURL);
+
+                                api.setImproved(true);
+                            }
+
+                            api.setImprovedURL(newURL);
+
+
+                            //Try to connect to new generated URL
+                            try {
+
+                                //If no improvement could be achieved throw old error again
+                                if(newURL==null || newURL.equals("")) {
+                                    throw e;
+                                }
+
+                                //Connect again with new URL
+                                Document page = Jsoup.connect(newURL).get();
+
+                                //Fetch data from body again - only use letters and numbers
+                                String body =Jsoup.parse(page.html()).text().replaceAll("[^A-Za-z0-9 ]","");
+                                System.out.println(body.length() + " chars found -- new created URL");
+                                api.setBody(body);
+
+                                JSON_API.counterImproved++;
+
+                                bodyList.add(api);
+
+                                //Try to fetch keywords
+                                try {
+                                    String keywords = page.select("meta[name=keywords]").get(0).attr("content").replaceAll("[^A-Za-z0-9 ]", "");
+                                    api.setKeywords(keywords);
+                                } catch(Exception eKeyword) {
+
+                                }
+
+                                JSON_API.counter++;
+
+                                //Set flag that shows whether improvement was successful
+                                api.setImproveSuccess(true);
+
+                            } catch(Exception e1){
+
+                                //Log error if improvement failed also
+                                api.setError(e1.getClass().getCanonicalName());
+
+                                //System.out.println("Improved Version..." + e.getClass().getCanonicalName() + " for \"" +  api.getImprovedURL() + "\"" + ", for API: " +api.getName());
+
+                                //e1.printStackTrace();
+
+                            }
+
+                        } else {
+                            //in all other exceptions cases the improvement won't work -> log error directly
+                            api.setError(e.getClass().getCanonicalName());
+                        }
                     }
 
+                    //System.out.println(counterABC);
+
+                    /**
+                     * --- Deprecated ---
+                     * Access to PW is handled by Selcuk in his crawler
+                     *
+                     */
                     /* if Homepage is set and Blog is empty -> try to get link from ProgrammableWeb
                     if(api.getBlog()==null || api.getBlog().equals("") && api.getHomepage()!=null && !api.getHomepage().equals("")) {
 
@@ -129,19 +281,35 @@ public class CheckURLMain {
 
         }
 
+        /**
+         * Due to the waiting time for the server several threads are running in parallel. To simplify
+         * the detection if all threads have done their work properly the program is waiting for some user input,
+         * so that human can decide whether all relevant data have been grapped from the web.
+         *
+         * One can just wait until no more findings are logged in the console and start with number 1-3 the wished
+         * output type.
+         *
+         * 1 - Prints all found bodies and keywords into a JSON-File
+         * 2 - Prints statistic data into a CSV-File which are relevant for the research on quality of the linked data set
+         * 3 - Prints all found bodies and keywords into a JSON-File which has the same format as Selcuks file
+         *
+         */
+
         //Check
         //Do something if enter is pressed
 
         Scanner scanner = new Scanner(System.in);
         String readString = scanner.nextLine();
         System.out.println(readString);
-        if (readString.equals("")) {
+
+        //Create JSON
+        if (readString.equals("1")) {
 
             System.out.println("Start creating JSON... " + bodyList.size());
 
             //Write all BodyAPIs to JSON
             try {
-                PrintWriter writer = new PrintWriter("KDD Seminar/data_complete.json", "UTF-8");
+                PrintWriter writer = new PrintWriter("data_complete.json", "UTF-8");
                 createJSONHead(writer);
 
                 Iterator<JSON_API> iterator1 = bodyList.iterator();
@@ -159,8 +327,6 @@ public class CheckURLMain {
 
                 System.out.println("Ready! " + counter1);
 
-
-
                 //Close JSON
                 closeJSON(writer);
             } catch (FileNotFoundException e) {
@@ -168,6 +334,68 @@ public class CheckURLMain {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
+
+        }
+        //Create CSV for URL evaluation
+        else if(readString.equals("2")) {
+
+            System.out.println("Found " + JSON_API.counterImproved + " APIs with new URLs");
+
+            System.out.println("Create Evaluation.csv...");
+
+            try{
+                PrintWriter writer = new PrintWriter("urlEvaluation.csv", "UTF-8");
+
+                Iterator<JSON_API> iterator1 = list.iterator();
+
+                writer.println("Name; Blog; Error; Improved; new URL; accessable");
+
+                int counter1 = 0;
+
+                while(iterator1.hasNext()) {
+
+                    JSON_API api = iterator1.next();
+
+                    writer.println(api.getName() + ";" +  api.getBlog() + ";" +  api.getError()+ ";" + api.isImproved() + ";" + api.getImprovedURL() + ";" + api.isImproveSuccess());
+                    counter1++;
+
+                }
+
+                System.out.println("Ready! " + counter1);
+
+
+            } catch (IOException e) {
+                // do something
+            }
+
+
+        }
+
+        //Create JSON in Selcuks Format
+        else if(readString.equals("3")) {
+
+            System.out.println("Create JSON...");
+
+            try{
+                PrintWriter writer = new PrintWriter("data_json_fomatted.json", "UTF-8");
+
+                Iterator<JSON_API> iterator1 = bodyList.iterator();
+
+                while(iterator1.hasNext()) {
+
+                    JSON_API api = iterator1.next();
+
+                    writer.println(api.getSelcukJSON());
+
+                }
+
+                System.out.println("Ready!");
+
+
+            } catch (IOException e) {
+                // do something
+            }
+
 
         }
         if (scanner.hasNextLine())

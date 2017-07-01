@@ -16,10 +16,16 @@ public class JSON_API {
     String blogDescr;
     String ldDescr;
 
+    String error="-";
+    Boolean improved=false;
+    String improvedURL="";
+    Boolean improveSuccess =false;
+
     String body;
 
 
     public static int counter = 0;
+    public static int counterImproved = 0;
 
     public JSON_API() {
     }
@@ -52,6 +58,7 @@ public class JSON_API {
     }
 
     public void setBlog(String blog) {
+        //System.out.println("Set blog to\"" + blog +"\"");
         this.blog = blog;
     }
 
@@ -111,6 +118,38 @@ public class JSON_API {
         this.keywords = keywords;
     }
 
+    public String getError() {
+        return error;
+    }
+
+    public Boolean isImproved() {
+        return improved;
+    }
+
+    public void setImproved(Boolean improved) {
+        this.improved = improved;
+    }
+
+    public String getImprovedURL() {
+        return improvedURL;
+    }
+
+    public void setImprovedURL(String improvedURL) {
+        this.improvedURL = improvedURL;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public Boolean isImproveSuccess() {
+        return improveSuccess;
+    }
+
+    public void setImproveSuccess(Boolean improveSuccess) {
+        this.improveSuccess = improveSuccess;
+    }
+
     @Override
     public String toString() {
         if(!this.homepage.equals("") || !this.getBlog().equals("")) {
@@ -121,5 +160,13 @@ public class JSON_API {
         } else {
             return "---";
         }
+    }
+
+    public String getSelcukJSON() {
+
+        String json = "{\"progweb_url\": \"" + getHomepage() + "\", \"api_url_full\": \"" + (getImprovedURL().equals("") ? (getBlog()) : (getImprovedURL())) + "\", \"website_descr\": \"" + getBody() + "\", \"api_name\": \"" + getName() + "\", \"website_keywords\":\"" + getKeywords() +"\"}";
+
+        return json;
+
     }
 }
