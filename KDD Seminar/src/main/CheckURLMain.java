@@ -379,6 +379,8 @@ public class CheckURLMain {
             try{
                 PrintWriter writer = new PrintWriter("data_json_fomatted.json", "UTF-8");
 
+                writer.println("[");
+
                 Iterator<JSON_API> iterator1 = bodyList.iterator();
 
                 while(iterator1.hasNext()) {
@@ -388,6 +390,8 @@ public class CheckURLMain {
                     writer.println(api.getSelcukJSON());
 
                 }
+
+                writer.println("]");
 
                 System.out.println("Ready!");
 

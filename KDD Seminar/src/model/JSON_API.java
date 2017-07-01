@@ -164,7 +164,7 @@ public class JSON_API {
 
     public String getSelcukJSON() {
 
-        String json = "{\"progweb_url\": \"" + getHomepage() + "\", \"api_url_full\": \"" + (getImprovedURL().equals("") ? (getBlog()) : (getImprovedURL())) + "\", \"website_descr\": \"" + getBody() + "\", \"api_name\": \"" + getName() + "\", \"website_keywords\":\"" + getKeywords() +"\"}";
+        String json = "  {\n     \"progweb_url\": \"" + getHomepage() + "\",\n     \"api_url_full\": \"" + (getImprovedURL().equals("") ? (getBlog()) : (getImprovedURL())) + "\",\n     \"website_descr\": \"" + getBody() + "\",\n     \"api_name\": \"" + getName() + "\",\n     \"website_keywords\":\"" + getKeywords() +"\"\n  }, ";
 
         return json;
 
