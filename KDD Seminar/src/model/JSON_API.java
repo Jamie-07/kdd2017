@@ -20,6 +20,8 @@ public class JSON_API {
     Boolean improved=false;
     String improvedURL="";
     Boolean improveSuccess =false;
+    Boolean deprecated = false;
+
 
     String body;
 
@@ -148,6 +150,14 @@ public class JSON_API {
 
     public void setImproveSuccess(Boolean improveSuccess) {
         this.improveSuccess = improveSuccess;
+    }
+
+    public Boolean isDeprecated() {
+        return deprecated;
+    }
+
+    public void setDeprecated(Boolean deprecated) {
+        this.deprecated = deprecated;
     }
 
     @Override

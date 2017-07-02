@@ -5,10 +5,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -134,6 +132,9 @@ public class CheckURLMain {
                     catch (Exception e) {
                         //e.printStackTrace();
                         //System.out.println(e.getClass().getCanonicalName() + " for \"" +  api.getBlog() + "\"" + ", for API: " +api.getName());
+
+                        //Set deprecated, because given Blog URL does not work
+                        api.setDeprecated(true);
 
                         //HTTP Status Error or Unknown Host Exception are possible to repair
                         if(e.getClass().getCanonicalName().equals("org.jsoup.HttpStatusException") ||
@@ -399,6 +400,42 @@ public class CheckURLMain {
             } catch (IOException e) {
                 // do something
             }
+
+
+        }
+        //Set depreacted Tags to RDF File
+        else if(readString.equals("4")) {
+
+            String triples = "";
+
+            Iterator<JSON_API> iterator1 = list.iterator();
+            int counterTriples = 0;
+
+            //Create deprecated triples for all APIs where an error occured while fetching Blog URL
+            while(iterator1.hasNext()) {
+
+                JSON_API api = iterator1.next();
+
+
+                if(api.isDeprecated()) {
+
+                    triples = triples + "\n<" + api.getURI() + "> <http://www.w3.org/2002/07/owl#deprecated> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>.";
+                    counterTriples++;
+
+                }
+
+            }
+
+            //Write triples to File
+            try {
+                PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("lwapis_v1.txt", true)));
+                out.println(triples);
+                out.close();
+            } catch (IOException e) {
+                //exception handling left as an exercise for the reader
+            }
+
+            System.out.println(counterTriples + " triples added!");
 
 
         }
