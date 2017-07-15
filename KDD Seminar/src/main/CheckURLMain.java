@@ -369,7 +369,6 @@ public class CheckURLMain {
                 // do something
             }
 
-
         }
 
         //Create JSON in Selcuks Format
@@ -378,29 +377,27 @@ public class CheckURLMain {
             System.out.println("Create JSON...");
 
             try{
-                PrintWriter writer = new PrintWriter("data_json_fomatted.json", "UTF-8");
+                PrintWriter writer = new PrintWriter("data_json_formatted.json", "UTF-8");
 
                 writer.println("[");
-
                 Iterator<JSON_API> iterator1 = bodyList.iterator();
 
                 while(iterator1.hasNext()) {
 
                     JSON_API api = iterator1.next();
-
                     writer.println(api.getSelcukJSON());
 
                 }
 
                 writer.println("]");
+                writer.close();
 
                 System.out.println("Ready!");
 
-
             } catch (IOException e) {
                 // do something
+                e.printStackTrace();
             }
-
 
         }
         //Set depreacted Tags to RDF File
@@ -415,7 +412,6 @@ public class CheckURLMain {
             while(iterator1.hasNext()) {
 
                 JSON_API api = iterator1.next();
-
 
                 if(api.isDeprecated()) {
 
@@ -436,7 +432,6 @@ public class CheckURLMain {
             }
 
             System.out.println(counterTriples + " triples added!");
-
 
         }
         if (scanner.hasNextLine())
@@ -459,6 +454,5 @@ public class CheckURLMain {
         writer.close();
 
     }
-
 
 }
