@@ -19,6 +19,8 @@ public class CheckURLMain {
 
     public static void main(String[] args) {
 
+        ArrayList<Integer> length = new ArrayList<>();
+
         //Stores all APIs
         ArrayList<JSON_API> list = new ArrayList<JSON_API>();
 
@@ -65,7 +67,6 @@ public class CheckURLMain {
         //How many APIs do provide an URL?
         System.out.println(counterBlog + " Links für APIs gefunden.");
 
-
         //Go through the whole API list and try to connect to the website / programmable web
         Iterator<JSON_API> iterator = list.iterator();
 
@@ -111,6 +112,7 @@ public class CheckURLMain {
                             //Fetch data from html body - only take letters or numbers
                             String body =Jsoup.parse(page.html()).text().replaceAll("[^A-Za-z0-9 ]","");
                             System.out.println(body.length() + " chars found");
+                            length.add(body.length());
                             api.setBody(body);
 
                             //Add API to list that only includes APIs with accessable websites
@@ -216,6 +218,7 @@ public class CheckURLMain {
                                 String body =Jsoup.parse(page.html()).text().replaceAll("[^A-Za-z0-9 ]","");
                                 System.out.println(body.length() + " chars found -- new created URL");
                                 api.setBody(body);
+                                length.add(body.length());
 
                                 JSON_API.counterImproved++;
 
@@ -433,6 +436,26 @@ public class CheckURLMain {
 
             System.out.println(counterTriples + " triples added!");
 
+            //Some statistical output
+        } else if(readString.equals("5")) {
+
+            Iterator<Integer> iteratorLength = length.iterator();
+            Integer sum = 0;
+
+            while(iteratorLength.hasNext()) {
+
+                sum = sum + iteratorLength.next();
+
+            }
+
+            System.out.println(sum + ", " + length.size());
+
+            double average = sum / length.size();
+            double variance = variance(length, average);
+
+
+            System.out.println("Mean of body length: " + average + ", variance=" + variance);
+
         }
         if (scanner.hasNextLine())
             readString = scanner.nextLine();
@@ -440,6 +463,8 @@ public class CheckURLMain {
             readString = null;
 
     }
+
+
 
     private static void createJSONHead(PrintWriter writer) {
 
@@ -453,6 +478,19 @@ public class CheckURLMain {
         writer.println("] } }");
         writer.close();
 
+    }
+
+    //Taken from https://stackoverflow.com/questions/26532832/calculating-sample-variance-in-java-but-is-giving-the-wrong-answer-when-inserti?answertab=oldest#tab-top
+
+    public static double variance(ArrayList<Integer> list, double avg) {
+        double sumDiffsSquared = 0.0;
+        for (int value : list)
+        {
+            double diff = value - avg;
+            diff *= diff;
+            sumDiffsSquared += diff;
+        }
+        return sumDiffsSquared  / (list.size()-1);
     }
 
 }
