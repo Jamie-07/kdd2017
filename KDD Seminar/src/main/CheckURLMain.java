@@ -19,6 +19,7 @@ public class CheckURLMain {
 
     public static void main(String[] args) {
 
+        //Used for storing the retrieved body length for calculating mean and variance of length
         ArrayList<Integer> length = new ArrayList<>();
 
         //Stores all APIs
@@ -366,7 +367,6 @@ public class CheckURLMain {
                 }
 
                 System.out.println("Ready! " + counter1);
-
 
             } catch (IOException e) {
                 // do something

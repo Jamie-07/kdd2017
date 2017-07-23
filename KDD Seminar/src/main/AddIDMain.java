@@ -38,12 +38,14 @@ public class AddIDMain {
 
                 JSONObject object = array.getJSONObject(i);
 
+                //Fetch ID and name for certain api
                 if(object.has("id") && object.has("api_name")) {
                     Integer id = (Integer) object.get("id");
                     String name = (String) object.get("api_name");
 
                     maxId= (maxId < id) ? (id) : (maxId);
 
+                    //Look in linked data json for name and append id
                     for(int j=0; j<linkedData.length(); j++) {
 
                         JSONObject ldObject = linkedData.getJSONObject(j);
@@ -61,7 +63,7 @@ public class AddIDMain {
 
             }
 
-            //Pruefe auf fehlende IDs
+            //Check for missing ids
             int counter = 0;
             int counter2 = 0;
 
@@ -76,6 +78,7 @@ public class AddIDMain {
 
             }
 
+            //Add missing ids
             for(int i=0; i<linkedData.length(); i++) {
 
                 JSONObject object = linkedData.getJSONObject(i);
@@ -85,6 +88,7 @@ public class AddIDMain {
 
             }
 
+            //Print ids into file
             PrintWriter writer = new PrintWriter("data/linked_data.json", "UTF-8");
 
             writer.print(linkedData.toString().replace("},","},\n"));
