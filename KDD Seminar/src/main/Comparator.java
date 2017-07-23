@@ -10,10 +10,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * Created by Jan-Peter Schmidt on 17.07.2017.
@@ -22,9 +19,12 @@ public class Comparator {
 
     public static void main(String[] args) {
 
-        String manualPath = "data/manual_real.json";
-        String machinePath = "data/kmeans.json";
-        String parameter = "test";
+        //String manualPath = "data/manual_real.json";
+        //String machinePath = "data/kmeans.json";
+        String manualPath = "data/manual_test.json";
+        String machinePath = "data/machine_cluster.json";
+        String[] parameter = {"dist","k","dim"};
+        String qualityPath = "data/pyComp.json";
 
         ArrayList<Integer> tp = new ArrayList<>();
         ArrayList<Integer> fp = new ArrayList<>();
@@ -34,13 +34,22 @@ public class Comparator {
         ArrayList<Double> recallList = new ArrayList<>();
         ArrayList<Double> precisionList = new ArrayList<>();
 
-        if(args.length>2) {
+        if(args.length>1) {
 
-            manualPath = args[1];
             machinePath = args[0];
-            parameter = args[2];
-
-            System.out.println("Start with manualPath " + manualPath + ", " + machinePath + ", " +parameter);
+            manualPath = args[1];
+            parameter = args[0].split("_");
+            if(parameter.length>3) {
+                parameter[0] = parameter[0] + "_" + parameter[1];
+                parameter[0] = parameter[0].replace("results/kmeansresults/", "");
+                parameter[1] = parameter[2];
+                parameter[2]= parameter[3].replace(".json","");
+            } else {
+                parameter[2] = parameter[2].replace(".json", "");
+                parameter[0] = parameter[0].replace("results/kmeansresults/", "");
+            }
+            System.out.println("Start with manualPath " + manualPath + ", " + machinePath + ", dist=" + parameter[0] +
+                    ", k=" + parameter[1] + ", dim=" + parameter[2]);
         }
 
         try {
@@ -55,14 +64,12 @@ public class Comparator {
             int length = machineJSON.length();
 
             for(int a=0; a<length;a++) {
-
                 for(int b=0; b<manualJSON.length();b++) {
                     if(machineJSON.getJSONObject(a).getInt("id")==manualJSON.getJSONObject(b).getInt("id")) {
                         machineJSONreduced.put(machineJSON.getJSONObject(a));
                         break;
                     }
                 }
-
             }
 
             System.out.println("Size API list reduced : " + machineJSONreduced.length());
@@ -111,7 +118,7 @@ public class Comparator {
                             Integer value = -1;
 
                             if(clusterIDOfAPI!=-1 && (value = clusterCounter.get(clusterIDOfAPI))!=null) {
-                                clusterCounter.put(clusterIDOfAPI,value);
+                                clusterCounter.put(clusterIDOfAPI,clusterCounter.get(clusterIDOfAPI)+1);
                             } else if(clusterIDOfAPI!=-1) {
                                 clusterCounter.put(clusterIDOfAPI,1);
                             }
@@ -120,39 +127,61 @@ public class Comparator {
 
                     }
 
-                    //Cluster ID mit größter Übereinstimmung
-                    Integer keyMax = Collections.max(clusterCounter.keySet());
+                    //System.out.println(clusterCounter.size() + "size");
 
-                    //Get machine APIs that are in this cluster
-                    ArrayList<Integer> containedMachineAPIs = new ArrayList<>();
+                    //System.out.println("1:"+clusterCounter.get(1) + " 2:" + clusterCounter.get(22));
 
-                    for (int j = 0; j < machineJSON.length(); j++) {
+                    Integer keyMax = -1;
+                    Integer maxValue = -1;
 
-                        JSONObject obj = machineJSON.getJSONObject(j);
+                    Set<Map.Entry<Integer, Integer>> set = clusterCounter.entrySet();
+                    Iterator<Map.Entry<Integer,Integer>> iterator = set.iterator();
 
-                        if(obj.has("cluster_id") && obj.get("cluster_id")==keyMax) {
-                            //System.out.println("add " + obj.get("name"));
-                            containedMachineAPIs.add(obj.getInt("id"));
+                    while(iterator.hasNext()) {
+
+                        Map.Entry<Integer, Integer> entry = iterator.next();
+                        if(entry.getValue() > maxValue) {
+                            maxValue = entry.getValue();
+                            keyMax = entry.getKey();
                         }
                     }
 
+                    //Cluster ID mit größter Übereinstimmung
+                    if(keyMax!=-1) {
 
-                    //Calculate Precision and Recall
-                    for(int l=0; l<machineJSON.length(); l++) {
+                        //System.out.println(keyMax);
 
-                        JSONObject obj = machineJSON.getJSONObject(l);
+                        //Get machine APIs that are in this cluster
+                        ArrayList<Integer> containedMachineAPIs = new ArrayList<>();
 
-                        Integer apiID = obj.getInt("id");
+                        for (int j = 0; j < machineJSON.length(); j++) {
 
-                        if(!containedMachineAPIs.contains(apiID) && !containedAPIs.contains(apiID)) {
-                            tn.add(apiID);
-                        } else if(containedAPIs.contains(apiID) && containedMachineAPIs.contains(apiID)) {
-                            tp.add(apiID);
-                        } else if(containedMachineAPIs.contains(apiID) && !containedAPIs.contains(apiID)) {
-                            fp.add(apiID);
-                        } else if(!containedMachineAPIs.contains(apiID) && containedAPIs.contains(apiID)) {
-                            fn.add(apiID);
+                            JSONObject obj = machineJSON.getJSONObject(j);
+
+                            if (obj.has("cluster_id") && obj.get("cluster_id") == keyMax) {
+                                //System.out.println("add " + obj.get("name"));
+                                containedMachineAPIs.add(obj.getInt("id"));
+                            }
                         }
+
+                        //Calculate Precision and Recall
+                        for (int l = 0; l < machineJSON.length(); l++) {
+
+                            JSONObject obj = machineJSON.getJSONObject(l);
+
+                            Integer apiID = obj.getInt("id");
+
+                            if (!containedMachineAPIs.contains(apiID) && !containedAPIs.contains(apiID)) {
+                                tn.add(apiID);
+                            } else if (containedAPIs.contains(apiID) && containedMachineAPIs.contains(apiID)) {
+                                tp.add(apiID);
+                            } else if (containedMachineAPIs.contains(apiID) && !containedAPIs.contains(apiID)) {
+                                fp.add(apiID);
+                            } else if (!containedMachineAPIs.contains(apiID) && containedAPIs.contains(apiID)) {
+                                fn.add(apiID);
+                            }
+                        }
+
                     }
                 }
 
@@ -211,27 +240,31 @@ public class Comparator {
 
             writeResult(precisionAvg, recallAvg, parameter);
 
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
 
-    public static void writeResult(double precision, double recall, String parameter) {
+    public static void writeResult(double precision, double recall, String[] parameter) {
 
-        String path = "result.csv";
+        String path = "finalResults.csv";
         File file = new File(path);
 
         try {
             if (!file.isFile()) {
 
                 file.createNewFile();
-                String line = "Precision;Recall;Parameter\n";
+                String line = "Precision;Recall;Distance;k;Dimension\n";
                 Files.write(Paths.get(path), line.getBytes(), StandardOpenOption.APPEND);
 
             }
 
-            String line = precision + ";" + recall + ";" + parameter + ";\n";
+            // dist_k_dim
+
+            String line = precision + ";" + recall + ";" + parameter[0] + ";" + parameter[1] + ";" + parameter[2] + ";\n";
             Files.write(Paths.get(path), line.getBytes(), StandardOpenOption.APPEND);
 
         } catch(IOException ioe) {
